@@ -23,15 +23,12 @@ const StartupDetailsPage = async ({
 }) => {
   const id = (await params).id;
 
-  const [post, select] = await Promise.all([
+  const [post, { select: editorPicks }] = await Promise.all([
     client.fetch(STARTUP_BY_ID_QUERY, { id }),
     client.fetch(PLAYLIST_BY_SLUG_QUERY, {
       slug: "editor-picks",
     }),
   ]);
-
-  let editorPicks = [];
-  if (select) editorPicks = select;
 
   if (!post) return notFound();
 
@@ -93,9 +90,14 @@ const StartupDetailsPage = async ({
             <p className="text-30-semibold">Editor Picks</p>
 
             <ul className="mt-7 card_grid-sm">
-              {editorPicks.map((post: StartupTypeCard, index: number) => {
-                return <StartupCard key={index} post={post} />;
-              })}
+              {editorPicks
+                .filter(
+                  (p: StartupTypeCard) =>
+                    p?.title?.toLowerCase() !== post?.title.toLowerCase()
+                )
+                .map((p: StartupTypeCard, index: number) => {
+                  return <StartupCard key={index} post={p} />;
+                })}
             </ul>
           </div>
         )}
