@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useActionState } from "react";
@@ -14,7 +12,7 @@ import { formSchema } from "@/lib/validation";
 
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-//import { createPitch } from "@/lib/actions";
+import { createPitch } from "@/lib/actions";
 
 const StartupForm = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -23,7 +21,10 @@ const StartupForm = () => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleFormSubmit = async (prevState: any, formData: FormData) => {
+  const handleFormSubmit = async (
+    prevState: { error: string; status: string },
+    formData: FormData
+  ) => {
     try {
       const formValues = {
         title: formData.get("title") as string,
@@ -35,22 +36,18 @@ const StartupForm = () => {
 
       await formSchema.parseAsync(formValues);
 
-      console.log(formValues);
+      const result = await createPitch(prevState, formData, pitch);
 
-      //const result = await createIdea(prevState, formData, pitch)
+      if (result.status === "SUCCESS") {
+        toast({
+          title: "Success",
+          description: "Your startup pitch has been created successfully",
+        });
 
-      //console.log(result);
+        router.push(`/startup/${result._id}`);
+      }
 
-      //   if (result.status === "SUCCESS") {
-      //     toast({
-      //       title: "Success",
-      //       description: "Your startup pitch has been created successfully",
-      //     });
-
-      //     router.push(`/startup/${result.id}`);
-      //   }
-
-      //   return result;
+      return result;
     } catch (error) {
       if (error instanceof z.ZodError) {
         const fieldErrors = error.flatten().fieldErrors;
@@ -76,7 +73,7 @@ const StartupForm = () => {
     }
   };
 
-  const [state, formAction, isPending] = useActionState(handleFormSubmit, {
+  const [, formAction, isPending] = useActionState(handleFormSubmit, {
     error: "",
     status: "INITIAL",
   });
