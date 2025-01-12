@@ -23,12 +23,15 @@ const StartupDetailsPage = async ({
 }) => {
   const id = (await params).id;
 
-  const [post, { select: editorPicks }] = await Promise.all([
+  const [post, select] = await Promise.all([
     client.fetch(STARTUP_BY_ID_QUERY, { id }),
     client.fetch(PLAYLIST_BY_SLUG_QUERY, {
       slug: "editor-picks",
     }),
   ]);
+
+  let editorPicks = [];
+  if (select) editorPicks = select;
 
   if (!post) return notFound();
 
